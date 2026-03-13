@@ -1,22 +1,26 @@
-from speech.speech_recognition_module import SpeechToText
-from nlp.command_parser import CommandParser
+from services.speech_service import SpeechService
+from nlp.command_parser import NLPProcessor
 from commands.executor import CommandExecutor
+from commands.router import CommandRouter
 
 
-stt = SpeechToText()
-nlp = CommandParser()
+speech = SpeechService()
+
+nlp = NLPProcessor()
+
 executor = CommandExecutor()
+router = CommandRouter(executor)
 
-running = True
+print("Ассистент Заря запущен")
 
-print("Голосовая система запущена")
+while True:
 
-while running:
+    text = speech.listen()
 
-    text = stt.recognize()
+    result = nlp.process(text)
 
-    command = nlp.parse(text)
+    if result:
 
-    if command:
+        intent, param = result
 
-        running = executor.execute(command[0], command[1])
+        router.route(intent, param)

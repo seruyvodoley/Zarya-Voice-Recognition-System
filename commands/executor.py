@@ -5,51 +5,32 @@ import ctypes
 
 class CommandExecutor:
 
-    def execute(self, command, param):
+    def open_browser(self, param):
 
-        if command == "open_browser":
+        print("Открываю браузер")
 
-            print("Открываю браузер")
+        os.system("start https://www.google.com")
 
-            # открывает браузер по умолчанию
-            os.system("start https://www.google.com")
+    def open_notepad(self, param):
 
-        elif command == "open_notepad":
+        print("Открываю блокнот")
 
-            print("Открываю блокнот")
+        subprocess.Popen("notepad.exe")
 
-            subprocess.Popen("notepad.exe")
+    def shutdown(self, param):
 
-        elif command == "shutdown":
+        print("Выключение компьютера")
 
-            print("Выключение компьютера")
+        os.system("shutdown /s /t 5")
 
-            os.system("shutdown /s /t 5")
+    def restart(self, param):
 
-        elif command == "restart":
+        print("Перезагрузка")
 
-            print("Перезагрузка компьютера")
+        os.system("shutdown /r /t 5")
 
-            os.system("shutdown /r /t 5")
+    def lock_pc(self, param):
 
-        elif command == "type_text":
+        print("Блокировка ПК")
 
-            print("Текст:", param)
-
-        elif command == "lock_pc":
-
-            print("Блокировка компьютера")
-
-            ctypes.windll.user32.LockWorkStation()
-
-        elif command == "exit":
-
-            print("Завершение программы")
-
-            return False
-
-        else:
-
-            print("Команда не распознана")
-
-        return True
+        ctypes.windll.user32.LockWorkStation()

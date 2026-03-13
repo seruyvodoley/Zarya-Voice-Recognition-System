@@ -1,20 +1,53 @@
-class CommandParser:
+class NLPProcessor:
 
-    def parse(self, text):
+    def __init__(self):
+
+        self.wake_word = "заря"
+
+        self.intents = {
+
+            "open_browser": [
+                "открой браузер",
+                "запусти браузер"
+            ],
+
+            "open_notepad": [
+                "открой блокнот",
+                "запусти блокнот"
+            ],
+
+            "shutdown": [
+                "выключи компьютер",
+                "выключи систему"
+            ],
+
+            "restart": [
+                "перезагрузи компьютер"
+            ],
+
+            "lock_pc": [
+                "заблокируй компьютер"
+            ]
+
+        }
+
+    def process(self, text):
 
         if text is None:
             return None
 
-        if "браузер" in text:
-            return ("open_browser", None)
+        text = text.lower()
 
-        if "блокнот" in text:
-            return ("open_notepad", None)
+        if not text.startswith(self.wake_word):
+            return None
 
-        if "закрой окно" in text:
-            return ("close_window", None)
+        command_text = text.replace(self.wake_word, "").strip()
 
-        if "выключи компьютер" in text:
-            return ("shutdown", None)
+        for intent, phrases in self.intents.items():
 
-        return ("unknown", text)
+            for phrase in phrases:
+
+                if phrase in command_text:
+                    return (intent, None)
+
+        return ("unknown", command_text)
