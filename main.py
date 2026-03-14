@@ -1,26 +1,20 @@
-from services.speech_service import SpeechService
-from nlp.command_parser import NLPProcessor
-from commands.executor import CommandExecutor
-from commands.router import CommandRouter
+import sys
+from PySide6.QtWidgets import QApplication
+from ui.assistant_widget import AssistantWidget
+from assistant.speech_thread import SpeechThread
+from assistant.assistant_controller import AssistantController
+from assistant.wake_word import WakeWordDetector
 
+app = QApplication(sys.argv)
 
-speech = SpeechService()
+widget = AssistantWidget()
+widget.show()
 
-nlp = NLPProcessor()
+wake = WakeWordDetector("заря")
+speech = SpeechThread()
 
-executor = CommandExecutor()
-router = CommandRouter(executor)
+controller = AssistantController(widget, wake, speech)
+speech.text_detected.connect(controller.process)
+speech.start()
 
-print("Ассистент Заря запущен")
-
-while True:
-
-    text = speech.listen()
-
-    result = nlp.process(text)
-
-    if result:
-
-        intent, param = result
-
-        router.route(intent, param)
+sys.exit(app.exec())
