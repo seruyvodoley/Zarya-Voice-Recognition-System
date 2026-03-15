@@ -1,88 +1,83 @@
 import time
-import pyttsx3
 from logger import get_logger
-from assistant.nlp_processor import NLPProcessor
-from assistant.command_executor import CommandExecutor
 
-logger = get_logger("Assistant")
+logger = get_logger("Controller")
 
 
 class AssistantController:
 
-    def __init__(self, widget, wake_detector, speech_thread):
+    def __init__(self, widget, wake_detector, speech_thread, nlp, executor):
 
         self.widget = widget
-        self.wake = wake_detector
+        self.wake_detector = wake_detector
         self.speech = speech_thread
+        self.nlp = nlp
+        self.executor = executor
 
-        self.state = "IDLE"
-        self.command_timeout = 3
-        self.command_start = None
-
-        logger.info("Инициализация NLP")
-        self.nlp = NLPProcessor()
-
-        logger.info("Инициализация Executor")
-        self.executor = CommandExecutor()
-
-        self.tts = pyttsx3.init()
+        self.waiting_command = False
+        self.wake_time = 0
 
     def process(self, text):
 
         logger.info(f"Получен текст: {text}")
 
-        text = text.lower().strip()
+        # режим ожидания команды
+        if self.waiting_command:
 
-        # ---------- режим ожидания ----------
-        if self.state == "IDLE":
-
-            if self.wake.detect(text):
-
-                logger.info("Wake word обнаружен")
-
-                self.widget.set_state("listening")
-                self.widget.say("Слушаю")
-
-                self.tts.say("Слушаю")
-                self.tts.runAndWait()
-
-                self.state = "LISTENING"
-                self.command_start = time.time()
-
-        # ---------- режим команды ----------
-        elif self.state == "LISTENING":
-
-            # проверка таймаута
-            if time.time() - self.command_start > self.command_timeout:
+            if time.time() - self.wake_time > 3:
 
                 logger.info("Таймаут ожидания команды")
 
+                self.waiting_command = False
                 self.widget.set_state("idle")
-                self.widget.say("")
 
-                self.state = "IDLE"
                 return
 
-            intent = self.nlp.process(text)
+            self.handle_command(text)
+            return
 
-            if intent:
+        # проверяем слово активации
+        if self.wake_detector.detect(text):
 
-                logger.info(f"Команда распознана: {intent}")
+            logger.info("Заря активирована")
 
-                self.widget.set_state("thinking")
-                self.widget.say("Выполняю")
+            self.widget.set_state("listening")
+            self.widget.say("Слушаю")
 
-                self.executor.execute(intent)
+            self.waiting_command = True
+            self.wake_time = time.time()
 
-                self.widget.set_state("idle")
+            # если команда была в той же фразе
+            words = text.split()
 
-                self.tts.say("Выполняю")
-                self.tts.runAndWait()
+            if len(words) > 1:
 
-                self.state = "IDLE"
+                command = " ".join(words[1:])
+                self.handle_command(command)
 
-            else:
+    def handle_command(self, text):
 
-                logger.info("Команда не распознана")
+        logger.info(f"Обработка команды: {text}")
 
-                self.widget.say("Не поняла команду")
+        self.widget.set_state("thinking")
+
+        intent = self.nlp.process(text)
+
+        if intent is None:
+
+            self.widget.say("Не понимаю команду")
+            self.widget.set_state("idle")
+
+            return
+
+        logger.info(f"Определён интент: {intent}")
+
+        self.widget.set_state("talking")
+
+        self.executor.execute(intent)
+
+        self.widget.say("Готово")
+
+        self.waiting_command = False
+
+        self.widget.set_state("idle")

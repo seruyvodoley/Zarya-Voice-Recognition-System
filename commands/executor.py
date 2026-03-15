@@ -1,36 +1,27 @@
 import os
-import subprocess
-import ctypes
+import webbrowser
 
 
 class CommandExecutor:
 
-    def open_browser(self, param):
+    def execute(self, intent):
 
-        print("Открываю браузер")
+        if intent == "open_browser":
 
-        os.system("start https://www.google.com")
+            webbrowser.open("https://google.com")
 
-    def open_notepad(self, param):
+        elif intent == "open_notepad":
 
-        print("Открываю блокнот")
+            os.system("notepad")
 
-        subprocess.Popen("notepad.exe")
+        elif intent == "shutdown":
 
-    def shutdown(self, param):
+            os.system("shutdown /s /t 1")
 
-        print("Выключение компьютера")
+        elif intent == "restart":
 
-        os.system("shutdown /s /t 5")
+            os.system("shutdown /r /t 1")
 
-    def restart(self, param):
+        elif intent == "lock_pc":
 
-        print("Перезагрузка")
-
-        os.system("shutdown /r /t 5")
-
-    def lock_pc(self, param):
-
-        print("Блокировка ПК")
-
-        ctypes.windll.user32.LockWorkStation()
+            os.system("rundll32.exe user32.dll,LockWorkStation")
