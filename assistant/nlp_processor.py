@@ -1,4 +1,5 @@
-from sentence_transformers import SentenceTransformer, util
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from logger import get_logger
 
 logger = get_logger("NLP")
@@ -8,19 +9,13 @@ class NLPProcessor:
 
     def __init__(self):
 
-        logger.info("Загрузка NLP модели...")
-
-        self.model = SentenceTransformer(
-            "paraphrase-multilingual-MiniLM-L12-v2"
-        )
-
-        logger.info("NLP модель загружена")
+        logger.info("Инициализация NLP")
 
         self.commands = {
             "open_browser": [
                 "открой браузер",
-                "запусти интернет",
-                "открой chrome"
+                "запусти браузер",
+                "открой интернет"
             ],
 
             "open_notepad": [
@@ -41,31 +36,34 @@ class NLPProcessor:
             ]
         }
 
-        self.embeddings = {}
+        phrases = []
+        self.intent_map = []
 
-        for intent, phrases in self.commands.items():
+        for intent, examples in self.commands.items():
 
-            self.embeddings[intent] = self.model.encode(
-                phrases,
-                convert_to_tensor=True
-            )
+            for text in examples:
+
+                phrases.append(text)
+                self.intent_map.append(intent)
+
+        self.vectorizer = TfidfVectorizer()
+
+        self.matrix = self.vectorizer.fit_transform(phrases)
+
+        logger.info("NLP готов")
 
     def process(self, text):
 
-        text_emb = self.model.encode(text, convert_to_tensor=True)
+        vec = self.vectorizer.transform([text])
 
-        best_intent = None
-        best_score = 0.55
+        scores = cosine_similarity(vec, self.matrix)
 
-        for intent, emb_list in self.embeddings.items():
+        best_index = scores.argmax()
+        best_score = scores[0][best_index]
 
-            scores = util.pytorch_cos_sim(text_emb, emb_list)
-            score = scores.max().item()
+        logger.info(f"NLP score: {best_score}")
 
-            logger.info(f"{intent} -> {score}")
+        if best_score < 0.35:
+            return None
 
-            if score > best_score:
-                best_score = score
-                best_intent = intent
-
-        return best_intent
+        return self.intent_map[best_index]

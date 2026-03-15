@@ -1,8 +1,11 @@
+from rapidfuzz import fuzz
+
+
 class WakeWordDetector:
 
     def __init__(self, wake_word="заря"):
 
-        self.wake_word = wake_word.lower()
+        self.wake_word = wake_word
 
     def detect(self, text):
 
@@ -11,4 +14,11 @@ class WakeWordDetector:
 
         words = text.lower().split()
 
-        return self.wake_word in words
+        for word in words:
+
+            score = fuzz.ratio(word, self.wake_word)
+
+            if score > 80:
+                return True
+
+        return False
