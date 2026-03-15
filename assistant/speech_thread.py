@@ -5,8 +5,7 @@ from PySide6.QtCore import QThread, Signal
 from vosk import Model, KaldiRecognizer
 from logger import get_logger
 
-logger = get_logger("SpeechThread")
-
+logger = get_logger("Speech")
 
 class SpeechThread(QThread):
 
@@ -15,12 +14,10 @@ class SpeechThread(QThread):
     def __init__(self, model_path="model/vosk-model-small-ru-0.22"):
         super().__init__()
 
-        logger.info("Загрузка модели VOSK...")
+        logger.info("Загрузка VOSK модели")
 
         self.model = Model(model_path)
         self.rec = KaldiRecognizer(self.model, 16000)
-
-        logger.info("Модель VOSK успешно загружена")
 
         self.q = queue.Queue()
 
@@ -29,19 +26,15 @@ class SpeechThread(QThread):
 
     def run(self):
 
-        logger.info("Запуск потока распознавания речи")
-
-        samplerate = 16000
+        logger.info("Микрофон запущен")
 
         with sd.RawInputStream(
-            samplerate=samplerate,
-            blocksize=4000,
+            samplerate=16000,
+            blocksize=2000,
             dtype="int16",
             channels=1,
             callback=self.callback
         ):
-
-            logger.info("Микрофон активирован")
 
             while True:
 
@@ -55,3 +48,11 @@ class SpeechThread(QThread):
                     if text:
                         logger.info(f"Распознано: {text}")
                         self.text_detected.emit(text)
+
+                else:
+
+                    partial = json.loads(self.rec.PartialResult())
+                    partial_text = partial.get("partial", "")
+
+                    if partial_text:
+                        logger.debug(f"partial: {partial_text}")

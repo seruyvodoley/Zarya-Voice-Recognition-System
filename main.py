@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QApplication
 from ui.assistant_widget import AssistantWidget
 from assistant.speech_thread import SpeechThread
 from assistant.assistant_controller import AssistantController
-from assistant.wake_word import WakeWordDetector
+from assistant.wake_word_detector import WakeWordDetector
 
 app = QApplication(sys.argv)
 

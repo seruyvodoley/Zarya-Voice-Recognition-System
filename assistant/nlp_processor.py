@@ -8,52 +8,64 @@ class NLPProcessor:
 
     def __init__(self):
 
-        logger.info("Загрузка NLP модели (LaBSE)...")
+        logger.info("Загрузка NLP модели...")
 
-        self.model = SentenceTransformer('sentence-transformers/LaBSE')
+        self.model = SentenceTransformer(
+            "paraphrase-multilingual-MiniLM-L12-v2"
+        )
 
-        logger.info("NLP модель успешно загружена")
+        logger.info("NLP модель загружена")
 
         self.commands = {
-            "open_browser": ["открой браузер", "запусти интернет"],
-            "open_notepad": ["открой блокнот"],
-            "shutdown": ["выключи компьютер"],
-            "restart": ["перезагрузи компьютер"],
-            "lock_pc": ["заблокируй компьютер"]
+            "open_browser": [
+                "открой браузер",
+                "запусти интернет",
+                "открой chrome"
+            ],
+
+            "open_notepad": [
+                "открой блокнот",
+                "запусти блокнот"
+            ],
+
+            "shutdown": [
+                "выключи компьютер"
+            ],
+
+            "restart": [
+                "перезагрузи компьютер"
+            ],
+
+            "lock_pc": [
+                "заблокируй компьютер"
+            ]
         }
 
         self.embeddings = {}
 
-        logger.info("Предварительное вычисление эмбеддингов команд")
-
         for intent, phrases in self.commands.items():
+
             self.embeddings[intent] = self.model.encode(
                 phrases,
                 convert_to_tensor=True
             )
 
-        logger.info("Эмбеддинги команд подготовлены")
-
     def process(self, text):
-
-        logger.info(f"Анализ команды: {text}")
 
         text_emb = self.model.encode(text, convert_to_tensor=True)
 
         best_intent = None
-        best_score = 0.5
+        best_score = 0.55
 
         for intent, emb_list in self.embeddings.items():
 
             scores = util.pytorch_cos_sim(text_emb, emb_list)
-            max_score = scores.max().item()
+            score = scores.max().item()
 
-            logger.info(f"{intent} -> {max_score:.3f}")
+            logger.info(f"{intent} -> {score}")
 
-            if max_score > best_score:
-                best_score = max_score
+            if score > best_score:
+                best_score = score
                 best_intent = intent
-
-        logger.info(f"Определён интент: {best_intent}")
 
         return best_intent
