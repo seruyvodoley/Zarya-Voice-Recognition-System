@@ -6,8 +6,8 @@ from ui.assistant_widget import AssistantWidget
 from assistant.speech_thread import SpeechThread
 from assistant.assistant_controller import AssistantController
 from assistant.wake_word_detector import WakeWordDetector
-from nlp.nlp_processor import NLPProcessor
-from commands.executor import CommandExecutor
+from nlp.nlp_processor import DynamicNLP
+from commands.executor_dynamic import DynamicCommandExecutor
 
 
 app = QApplication(sys.argv)
@@ -19,9 +19,9 @@ speech = SpeechThread()
 
 wake = WakeWordDetector("заря")
 
-nlp = NLPProcessor()
+nlp = DynamicNLP()
 
-executor = CommandExecutor()
+executor = DynamicCommandExecutor()
 
 controller = AssistantController(
     widget,
